@@ -34,18 +34,42 @@ services = {
     6379: "Redis",
     8080: "HTTP Alternate"
 }
+host = input("Enter host: ")
+while True:
+    try:
+        start_port = int(input("Enter start port: "))
+        if 1<= start_port <= 65535:
+            break
+        else:
+            print("Port must be between 1 and 65535")
+    except ValueError:
+        print("That's not a valid port!")
+while True:
+    try:
+        end_port = int(input("Enter end port: "))
+        if not (1<=end_port<=65535):
+            print("Port should be between 1 and 65535")
+        elif (start_port>end_port):
+            print("Start port cannot be greater in value than end port")
+        else:
+            break
+    except ValueError:
+        print("That's not a valid port!")
 
-print("Scanning scanme.nmap.org...")
-for num in range(20,31):
+print(f"Scanning {host}...")
+open_count = 0
+print("PORT SERVICE STATUS")
+print("-------------------------")
+for port in range(start_port,end_port+1):
     my_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    host = "scanme.nmap.org"
-    port = num
     result = my_socket.connect_ex((host, port))
-    port_name = services.get(num,"Unknown")
+    port_name = services.get(port,"Unknown")
     if(result != 0):
-        print(num,port_name,"CLOSED")
+        status = "CLOSED"
     else:
-        print(num, port_name,"OPEN")
+        status = "OPEN"
+        open_count+=1
+    print(f"{port:<6}{port_name:<20}{status}")
 
     my_socket.close()
 
