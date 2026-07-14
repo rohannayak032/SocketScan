@@ -1,4 +1,5 @@
 import socket 
+import time
 
 services = {
     20: "FTP Data",
@@ -56,10 +57,12 @@ while True:
     except ValueError:
         print("That's not a valid port!")
 
+start_time = time.time()
+
 print(f"Scanning {host}...")
 open_count = 0
-print("PORT SERVICE STATUS")
-print("-------------------------")
+print(f"{'PORT':<6}{'SERVICE':<20}STATUS")
+print("--------------------------------------------------")
 for port in range(start_port,end_port+1):
     my_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     result = my_socket.connect_ex((host, port))
@@ -72,6 +75,16 @@ for port in range(start_port,end_port+1):
     print(f"{port:<6}{port_name:<20}{status}")
 
     my_socket.close()
+
+end_time = time.time()
+scan_time = end_time-start_time
+print("--------------------------------------------------")
+print("Scan completed!")
+print("\n")
+print(f"{'Host':<20}: {host}")
+print(f"{'Ports Scanned':<20}: {end_port-start_port+1}")
+print(f"{'Open Ports Found':<20}: {open_count}")
+print(f"{'Time Taken':<20}: {scan_time:.2f}s")
 
 
 
