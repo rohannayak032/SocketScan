@@ -8,18 +8,49 @@ This project was developed for educational purposes to learn Python socket progr
 
 ## Features
 
-- Scan any hostname or IP address
-- Custom port range
-- Input validation
-- Common service detection
-- Scan timing
-- Scan summary
-- Clean CLI interface
+- Multithreaded TCP port scanning
+- Automatic hostname validation
+- Service detection for common ports
+- Structured scan reports
+- Thread pool using `ThreadPoolExecutor`
+- Scan timing and performance metrics
+- Clean, formatted CLI output
+
+## Changelog
+
+### v1.1.0 - Multithreaded Scanner Release
+#### Added
+- Multithreaded port scanning using `ThreadPoolExecutor`
+- Structured `scan_data` object for storing scan results
+- Detailed CLI report displaying:
+  - Host
+  - Open ports
+  - Port status
+  - Service names
+  - Total ports scanned
+  - Thread count
+  - Scan duration
+- Thread usage statistics
+- Improved report formatting with aligned output
+
+#### Changed
+- Refactored `scan_port()` to return structured dictionaries
+- Refactored `scan_ports()` to return a unified `scan_data` object
+- Replaced `print_summary()` with `print_report()`
+- Moved scan timing into `scan_ports()`
+- Simplified `main()` by separating scanning and reporting responsibilities
+
+#### Improved
+- Better separation of concerns throughout the project
+- Cleaner, more modular architecture
+- Improved readability and maintainability
+- More professional terminal output
 
 ## Technologies Used
 
 - Python 3
 - socket
+- concurrent.futures
 - time
 
 ## Installation
@@ -36,30 +67,13 @@ Run:
 python socketscan.py
 ```
 
-## Example
+## Example Output
 
-```text
-==================================================
-              SocketScan Port Scanner
-                   Version 1.0
-==================================================
+Example scan of `scanme.nmap.org` using SocketScan v1.1.0.
 
-Scanning scanme.nmap.org...
-
-PORT   SERVICE              STATUS
-────────────────────────────────────────
-22     SSH                  OPEN
-80     HTTP                 OPEN
-443    HTTPS                OPEN
-
-Scan Summary
-==================================================
-Host              : scanme.nmap.org
-Ports Scanned     : 1024
-Open Ports Found  : 3
-Time Taken        : 0.52 s
-==================================================
-```
+<p align="center">
+  <img src="screenshots/report.png" width="700">
+</p>
 
 ## Author
 

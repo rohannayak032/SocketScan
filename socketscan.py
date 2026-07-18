@@ -1,5 +1,6 @@
 import socket 
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 LINE = "─" * 50
 TITLE_LINE = "=" * 50
@@ -52,41 +53,73 @@ def get_valid_port(prompt):
         except ValueError:
             print("That's not a valid port!")
 
+def scan_port(host, port):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as my_socket:
+        my_socket.settimeout(1)
+        result = my_socket.connect_ex((host,port))
+        port_name = services.get(port,"Unknown")
+        return {
+            "port":port,
+            "open": result == 0,
+            "status": "OPEN" if result == 0 else "CLOSED",
+            "service": port_name
+        }
+
 def scan_ports(host, start_port, end_port):
-    open_count = 0
-    print(f"\nScanning {host}...\n")
-    print(f"{'PORT':<6}{'SERVICE':<20}STATUS")
-    print(LINE)
+    results = []
+    start_time = time.time()
+    with ThreadPoolExecutor(max_workers=100) as executor:
+        futures = []
 
-    for port in range(start_port,end_port+1):
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as my_socket:
-            my_socket.settimeout(1)
-            result = my_socket.connect_ex((host, port))
-            port_name = services.get(port, "Unknown")
-            if result == 0:
-                status = "OPEN"
-                open_count += 1
-            else:
-                status = "CLOSED"
-            print(f"{port:<6}{port_name:<20}{status}")
-    return open_count
+        for port in range(start_port, end_port + 1):
+            future = executor.submit(scan_port, host, port)
+            futures.append(future)
+        for future in futures:
+            port_info = future.result()
+            if port_info["open"]:
+                results.append(port_info)
+    scan_time = time.time() - start_time
+    scan_data = {
+        "host": host,
+        "ports": results,
+        "scan_time": scan_time,
+        "threads":100,
+        "total_ports": end_port-start_port+1,
+        "open_ports": len(results)
+    }
+    return scan_data
 
-def print_summary(host, start_port, end_port, scan_time, open_count):
-    print(LINE)
-    print("Scan Summary")
+def print_report(scan_data):
+    print(TITLE_LINE)
+    print("SocketScan Report".center(50))
     print(TITLE_LINE)
 
-    print(f"{'Host':<20}: {host}")
-    print(f"{'Ports Scanned':<20}: {end_port - start_port + 1}")
-    print(f"{'Open Ports Found':<20}: {open_count}")
-    print(f"{'Time Taken':<20}: {scan_time:.2f} s")
+    print(f"Host: {scan_data['host']}")
+
+    print(TITLE_LINE)
+    print("Open Ports")
+    print(LINE)
+
+    if not scan_data["ports"]:
+        print("No open ports found.")
+    else:
+        print(f"{'PORT':<8}{'STATUS':<10}SERVICE")
+        print(LINE)
+        for port in scan_data["ports"]:
+            print(f"{port['port']:<8}{port['status']:<10}{port['service']}")
+    print(LINE)
+
+    print(f"{'Ports Scanned':<20}: {scan_data['total_ports']}")
+    print(f"{'Open Ports Found':<20}: {scan_data['open_ports']}")
+    print(f"{'Threads Used':<20}: {scan_data['threads']}")
+    print(f"{'Scan Time':<20}: {scan_data['scan_time']:.2f} s")
 
     print(TITLE_LINE)
 
 def print_logo():
     print(TITLE_LINE)
     print("SocketScan Port Scanner".center(50))
-    print("Version 1.0".center(50))
+    print("Version 1.1.0".center(50))
     print(TITLE_LINE)
 
 def get_valid_host():
@@ -114,21 +147,9 @@ def main():
         else:
             break
 
-    start_time = time.time()
+    scan_data = scan_ports(host, start_port, end_port)
 
-    open_count = scan_ports(host, start_port, end_port)
-
-    end_time = time.time()
-
-    scan_time = end_time - start_time
-
-    print_summary(
-        host,
-        start_port,
-        end_port,
-        scan_time,
-        open_count
-    )
+    print_report(scan_data)
 
 if __name__ == "__main__":
     main()
